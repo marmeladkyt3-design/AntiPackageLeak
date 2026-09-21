@@ -1,0 +1,436 @@
+-- ============================================================
+-- AntiPackageLeak — Complete Database Schema
+-- БД: if0_42944847_AntiPackageLeak (sql309.infinityfree.com)
+-- Все таблицы: CREATE IF NOT EXISTS (безопасно для повторного запуска)
+-- ============================================================
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- 1. USERS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `users` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `username` varchar(50) NOT NULL,
+    `email` varchar(100) NOT NULL,
+    `password` varchar(255) NOT NULL,
+    `role` varchar(50) NOT NULL DEFAULT 'user',
+    `hwid` varchar(255) DEFAULT NULL,
+    `uuid` varchar(100) DEFAULT NULL,
+    `uid` varchar(100) DEFAULT NULL,
+    `subscription_end` datetime DEFAULT NULL,
+    `last_login` datetime DEFAULT NULL,
+    `last_ip` varchar(45) DEFAULT NULL,
+    `last_activity` datetime DEFAULT NULL,
+    `avatar_url` varchar(500) DEFAULT NULL,
+    `total_launches` int(11) NOT NULL DEFAULT 0,
+    `subscription_notified` tinyint(1) NOT NULL DEFAULT 0,
+    `banned` tinyint(1) NOT NULL DEFAULT 0,
+    `ban_reason` text DEFAULT NULL,
+    `banned_until` datetime DEFAULT NULL,
+    `banned_by` int(11) DEFAULT NULL,
+    `banned_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `username` (`username`),
+    UNIQUE KEY `email` (`email`),
+    KEY `role` (`role`),
+    KEY `hwid` (`hwid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 2. ROLES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `roles` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `role_key` varchar(50) NOT NULL,
+    `name` varchar(100) NOT NULL,
+    `icon` varchar(50) NOT NULL DEFAULT 'fa-user-tag',
+    `can_admin` tinyint(1) NOT NULL DEFAULT 0,
+    `can_support` tinyint(1) NOT NULL DEFAULT 0,
+    `as_admin` tinyint(1) NOT NULL DEFAULT 0,
+    `is_auto` tinyint(1) NOT NULL DEFAULT 0,
+    `auto_type` varchar(20) DEFAULT NULL,
+    `is_system` tinyint(1) NOT NULL DEFAULT 0,
+    `priority` int(11) NOT NULL DEFAULT 30,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `role_key` (`role_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 3. LICENSE KEYS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `license_keys` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `key` varchar(100) NOT NULL,
+    `key_code` varchar(100) DEFAULT NULL,
+    `days` int(11) NOT NULL DEFAULT 30,
+    `used` tinyint(1) NOT NULL DEFAULT 0,
+    `used_by` int(11) DEFAULT NULL,
+    `used_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `key` (`key`),
+    KEY `key_code` (`key_code`),
+    KEY `used` (`used`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 4. SHOP PLANS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `shop_plans` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `slug` varchar(64) NOT NULL,
+    `name` varchar(100) NOT NULL,
+    `price` int(11) NOT NULL DEFAULT 1,
+    `badge` varchar(64) NOT NULL DEFAULT '',
+    `features` text NOT NULL DEFAULT '[]',
+    `is_active` tinyint(1) NOT NULL DEFAULT 1,
+    `sort_order` int(11) NOT NULL DEFAULT 0,
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 5. LAUNCHER SETTINGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `launcher_settings` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `setting_key` varchar(100) NOT NULL,
+    `setting_value` text NOT NULL,
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `setting_key` (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 6. LAUNCHER VERSIONS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `launcher_versions` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `version` varchar(50) NOT NULL,
+    `download_url` text NOT NULL DEFAULT '',
+    `url_game_jar` text NOT NULL DEFAULT '',
+    `url_libs` text NOT NULL DEFAULT '',
+    `url_assets` text NOT NULL DEFAULT '',
+    `url_java` text NOT NULL DEFAULT '',
+    `url_natives` text NOT NULL DEFAULT '',
+    `url_fake_jar` text NOT NULL DEFAULT '',
+    `install_dir` varchar(100) NOT NULL DEFAULT 'PouchCrack',
+    `required_role` varchar(50) NOT NULL DEFAULT '',
+    `hash_game_jar` varchar(64) NOT NULL DEFAULT '',
+    `hash_libs` varchar(64) NOT NULL DEFAULT '',
+    `hash_assets` varchar(64) NOT NULL DEFAULT '',
+    `hash_java` varchar(64) NOT NULL DEFAULT '',
+    `hash_natives` varchar(64) NOT NULL DEFAULT '',
+    `crypto_key` text NOT NULL DEFAULT '',
+    `launcher_build_min` int(11) NOT NULL DEFAULT 0,
+    `update_url` text NOT NULL DEFAULT '',
+    `update_msg` text NOT NULL DEFAULT '',
+    `is_active` tinyint(1) NOT NULL DEFAULT 1,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 7. LAUNCHER STATS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `launcher_stats` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `client` varchar(50) DEFAULT NULL,
+    `hwid` varchar(255) DEFAULT NULL,
+    `ip` varchar(45) DEFAULT NULL,
+    `version` varchar(50) DEFAULT NULL,
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 8. LAUNCHER NONCES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `launcher_nonces` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `nonce` varchar(64) NOT NULL,
+    `user_id` int(11) NOT NULL,
+    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_nonce` (`nonce`),
+    KEY `idx_user_created` (`user_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 9. NATIVE CHECKS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `native_checks` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `hwid` varchar(128) NOT NULL,
+    `checksum` varchar(128) NOT NULL,
+    `checked_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_user_checksum` (`user_id`, `checksum`, `checked_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 10. PAYMENTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `payments` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `order_id` varchar(64) NOT NULL,
+    `user_id` int(11) NOT NULL,
+    `plan` varchar(32) NOT NULL,
+    `amount` decimal(10,2) NOT NULL,
+    `currency` varchar(8) NOT NULL DEFAULT 'RUB',
+    `status` varchar(20) NOT NULL DEFAULT 'created',
+    `payment_id` varchar(64) DEFAULT NULL,
+    `promo_code` varchar(64) DEFAULT NULL,
+    `test` tinyint(1) NOT NULL DEFAULT 0,
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    `paid_at` datetime DEFAULT NULL,
+    `updated_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `order_id` (`order_id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 11. PROMO CODES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `promo_codes` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `code` varchar(64) NOT NULL,
+    `discount_type` enum('percent','fixed') NOT NULL DEFAULT 'percent',
+    `discount_value` int(11) NOT NULL DEFAULT 0,
+    `min_purchase` int(11) NOT NULL DEFAULT 0,
+    `max_uses` int(11) DEFAULT NULL,
+    `used_count` int(11) NOT NULL DEFAULT 0,
+    `expires_at` datetime DEFAULT NULL,
+    `active` tinyint(1) NOT NULL DEFAULT 1,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 12. REVIEWS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `reviews` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `username` varchar(64) NOT NULL,
+    `avatar_url` varchar(255) DEFAULT NULL,
+    `rating` tinyint(1) NOT NULL DEFAULT 5,
+    `comment` text NOT NULL,
+    `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    `moderated_by` int(11) DEFAULT NULL,
+    `moderated_at` datetime DEFAULT NULL,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`),
+    KEY `status` (`status`),
+    KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 13. REFERRALS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `referrals` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `referrer_id` int(11) NOT NULL,
+    `referred_id` int(11) NOT NULL,
+    `rewarded` tinyint(1) NOT NULL DEFAULT 0,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `referred_id` (`referred_id`),
+    KEY `referrer_id` (`referrer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 14. USER 2FA
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `user_2fa` (
+    `user_id` int(11) NOT NULL,
+    `secret` varchar(64) NOT NULL,
+    `enabled` tinyint(1) NOT NULL DEFAULT 0,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 15. USER AVATARS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `user_avatars` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `avatar_url` varchar(500) NOT NULL,
+    `is_file` tinyint(1) NOT NULL DEFAULT 0,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 16. USER SETTINGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `user_settings` (
+    `user_id` int(11) NOT NULL,
+    `ram_mb` int(11) NOT NULL DEFAULT 4096,
+    `lang` varchar(5) NOT NULL DEFAULT 'en',
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 18. USER NOTIFICATIONS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `user_notifications` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `title` varchar(255) NOT NULL,
+    `message` text NOT NULL,
+    `type` varchar(20) NOT NULL DEFAULT 'info',
+    `link` varchar(255) DEFAULT NULL,
+    `is_read` tinyint(1) NOT NULL DEFAULT 0,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 19. DOWNLOAD LOGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `download_logs` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `filename` varchar(255) NOT NULL,
+    `ip` varchar(45) NOT NULL DEFAULT '',
+    `hwid` varchar(64) NOT NULL DEFAULT '',
+    `key_code` varchar(100) NOT NULL DEFAULT '',
+    `login` varchar(100) DEFAULT NULL,
+    `file_type` varchar(50) DEFAULT NULL,
+    `file_size` int(11) DEFAULT NULL,
+    `downloaded_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_filename` (`filename`),
+    KEY `idx_downloaded_at` (`downloaded_at`),
+    KEY `idx_hwid` (`hwid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 20. LOGIN ATTEMPTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `login_attempts` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `ip` varchar(45) NOT NULL,
+    `login` varchar(100) DEFAULT NULL,
+    `attempts` int(11) NOT NULL DEFAULT 1,
+    `last_attempt` datetime DEFAULT CURRENT_TIMESTAMP,
+    `blocked_until` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `ip` (`ip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 21. ADMIN LOGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `admin_logs` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `admin_id` int(11) NOT NULL,
+    `admin_login` varchar(64) NOT NULL,
+    `action` varchar(32) NOT NULL,
+    `target_user` varchar(64) DEFAULT NULL,
+    `target_user_id` int(11) DEFAULT NULL,
+    `details` text DEFAULT NULL,
+    `created_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `admin_id` (`admin_id`),
+    KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 22. BANNED HWIDS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `banned_hwids` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `hwid` varchar(255) NOT NULL,
+    `user_id` int(11) DEFAULT NULL,
+    `reason` text DEFAULT NULL,
+    `banned_by` int(11) DEFAULT NULL,
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `hwid` (`hwid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 23. BANNED IPS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `banned_ips` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `ip_address` varchar(45) NOT NULL,
+    `user_id` int(11) DEFAULT NULL,
+    `reason` text DEFAULT NULL,
+    `banned_by` int(11) DEFAULT NULL,
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `ip_address` (`ip_address`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 24. DEVTOOLS BANS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `devtools_bans` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `ip` varchar(45) NOT NULL,
+    `user_id` int(11) DEFAULT NULL,
+    `banned_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `expires_at` timestamp NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `idx_ip` (`ip`),
+    KEY `idx_user` (`user_id`),
+    KEY `idx_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ============================================================
+-- SEED DATA
+-- ============================================================
+
+-- ROLES
+INSERT IGNORE INTO `roles` (`role_key`, `name`, `icon`, `can_admin`, `can_support`, `as_admin`, `is_auto`, `auto_type`, `is_system`, `priority`) VALUES
+('admin', 'Администратор', 'fa-crown', 1, 1, 1, 0, NULL, 1, 100),
+('user', 'User', 'fa-user', 0, 0, 0, 1, 'has_sub', 0, 30),
+('guest', 'Guest', 'fa-user-slash', 0, 0, 0, 1, 'no_sub', 0, 10),
+('premium', 'Premium', 'fa-star', 0, 0, 0, 0, NULL, 0, 50),
+('support', 'Support', 'fa-headset', 0, 1, 1, 0, NULL, 0, 60),
+('media', 'Media', 'fa-video', 0, 0, 0, 0, NULL, 0, 20);
+
+-- LAUNCHER SETTINGS
+INSERT IGNORE INTO `launcher_settings` (`setting_key`, `setting_value`) VALUES
+('maintenance_mode', '0'),
+('maintenance_message', 'Сайт на техническом обслуживании.'),
+('launcher_download_url', ''),
+('current_version', '1.0.0'),
+('discord_link', ''),
+('telegram_link', ''),
+('youtube_link', ''),
+('site_url', 'https://antiaileaks.ct.ws'),
+('launcher_force_update', '0'),
+('launcher_build_min', '1'),
+('launcher_update_url', 'https://antiaileaks.ct.ws/download_launcher.php'),
+('launcher_update_msg', 'Доступна новая версия лаунчера. Обновите для продолжения.'),
+('welcome_message', ''),
+('news_message', ''),
+('java_download_url', ''),
+('java_download_hash', ''),
+('global_assets_url', ''),
+('global_assets_hash', ''),
+('maintenance_bypass_roles', 'admin'),
+('maintenance_enabled', '0'),
+('maintenance_title', ''),
+('maintenance_msg', ''),
+('maintenance_timer', ''),
+('show_discord_btn', '0');
+
+SET FOREIGN_KEY_CHECKS = 1;
